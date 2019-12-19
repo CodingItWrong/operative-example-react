@@ -2,6 +2,7 @@ import uuid from 'uuid/v4';
 
 export default class Operative {
   #httpClient;
+  #records;
   #lastUpdate;
 
   constructor({httpClient}) {
@@ -10,16 +11,44 @@ export default class Operative {
 
   loadAll() {
     return this.#httpClient.get('/').then(({data}) => {
+      this.#records = data;
       this.#recordUpdate();
-      return data;
     });
   }
 
-  getRemoteOperations() {
+  get records() {
+    return this.#records;
+  }
+
+  applyRemoteOperations() {
     const url = `/operations?since=${this.#lastUpdate}`;
-    return this.#httpClient.get(url).then(({data}) => {
-      this.#recordUpdate();
-      return data;
+    return this.#httpClient.get(url).then(({data: operations}) => {
+      let updatedRecords = this.#records;
+      operations.forEach(operation => {
+        switch (operation.action) {
+          case 'create': {
+            const record = {
+              id: operation.recordId,
+              ...operation.attributes, // TODO: handle server-generated attributes. Or maybe we can't have those in this model. at least dates?
+            };
+            updatedRecords = [...updatedRecords, record];
+            break;
+          }
+          case 'update':
+            updatedRecords = updatedRecords.map(record =>
+              record.id === operation.recordId
+                ? {...record, ...operation.attributes}
+                : record,
+            );
+            break;
+          case 'delete':
+            updatedRecords = updatedRecords.filter(
+              record => record.id !== operation.recordId,
+            );
+            break;
+        }
+      });
+      this.#records = updatedRecords;
     });
   }
 
@@ -30,10 +59,13 @@ export default class Operative {
       recordId: uuid(),
       attributes,
     };
-    return this.#sendOperations([createOperation]).then(({data}) => ({
-      id: data[0],
-      ...attributes,
-    }));
+    return this.#sendOperations([createOperation]).then(() => {
+      const newRecord = {
+        id: createOperation.recordId,
+        ...attributes,
+      };
+      this.#records = [...this.#records, newRecord];
+    });
   }
 
   update(record, attributes) {
@@ -43,15 +75,28 @@ export default class Operative {
       recordId: record.id,
       attributes,
     };
-    return this.#sendOperations([updateOperation]).then(() => ({
-      ...record,
-      ...attributes,
-    }));
+    return this.#sendOperations([updateOperation]).then(() => {
+      const updatedRecord = {
+        ...record,
+        ...attributes,
+      };
+      this.#records = this.#records.map(record =>
+        record.id === updatedRecord.id ? updatedRecord : record,
+      );
+    });
   }
 
-  delete(record) {
-    const deleteOperation = {action: 'delete', id: uuid(), recordId: record.id};
-    return this.#sendOperations([deleteOperation]).then(() => record);
+  delete(recordToDelete) {
+    const deleteOperation = {
+      action: 'delete',
+      id: uuid(),
+      recordId: recordToDelete.id,
+    };
+    return this.#sendOperations([deleteOperation]).then(() => {
+      this.#records = this.#records.filter(
+        record => record.id !== recordToDelete.id,
+      );
+    });
   }
 
   #sendOperations = operations => {
