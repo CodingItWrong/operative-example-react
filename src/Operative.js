@@ -21,6 +21,18 @@ export default class Operative {
       }));
   }
 
+  update(record, attributes) {
+    const updateOperation = {action: 'update', id: record.id, attributes};
+    return this.#httpClient
+      .post('/', [updateOperation], {
+        headers: {'Content-Type': 'application/json'},
+      })
+      .then(() => ({
+        ...record,
+        ...attributes,
+      }));
+  }
+
   delete(record) {
     const deleteOperation = {action: 'delete', id: record.id};
     return this.#httpClient

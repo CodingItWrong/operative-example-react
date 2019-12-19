@@ -24,6 +24,14 @@ const TodoList = () => {
     });
   };
 
+  const handleRename = todoToRename =>
+    operative.update(todoToRename, {name: 'Renamed'}).then(renamedTodo => {
+      console.log({renamedTodo});
+      setTodos(
+        todos.map(todo => (todo.id === renamedTodo.id ? renamedTodo : todo)),
+      );
+    });
+
   const handleDelete = todoToDelete =>
     operative
       .delete(todoToDelete)
@@ -42,6 +50,9 @@ const TodoList = () => {
         {todos.map(todo => (
           <li key={todo.id}>
             {todo.name}
+            <button type="button" onClick={() => handleRename(todo)}>
+              Rename
+            </button>
             <button type="button" onClick={() => handleDelete(todo)}>
               Delete
             </button>
