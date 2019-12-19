@@ -13,9 +13,7 @@ const TodoList = () => {
     update,
     destroy,
     applyRemoteOperations,
-  } = useOperative({
-    httpClient,
-  });
+  } = useOperative({httpClient});
   const [name, setName] = useState('');
 
   const handleSubmit = e => {
