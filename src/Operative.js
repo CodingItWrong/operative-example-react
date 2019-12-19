@@ -3,7 +3,7 @@ import uuid from 'uuid/v4';
 export default class Operative {
   #httpClient;
   #records;
-  #lastUpdate;
+  #lastSync;
 
   constructor({httpClient}) {
     this.#httpClient = httpClient;
@@ -12,7 +12,7 @@ export default class Operative {
   loadAll() {
     return this.#httpClient.get('/').then(({data}) => {
       this.#records = data;
-      this.#recordUpdate();
+      this.#trackLastSync();
     });
   }
 
@@ -21,7 +21,7 @@ export default class Operative {
   }
 
   applyRemoteOperations() {
-    const url = `/operations?since=${this.#lastUpdate}`;
+    const url = `/operations?since=${this.#lastSync}`;
     return this.#httpClient.get(url).then(this.#handleRemoteOperations);
   }
 
@@ -61,19 +61,19 @@ export default class Operative {
   }
 
   #sendOperations = operations => {
-    const url = `/operations?since=${this.#lastUpdate}`;
+    const url = `/operations?since=${this.#lastSync}`;
     return this.#httpClient.post(url, operations, {
       headers: {'Content-Type': 'application/json'},
     });
   };
 
-  #recordUpdate = () => {
-    this.#lastUpdate = new Date().getTime();
+  #trackLastSync = () => {
+    this.#lastSync = new Date().getTime();
   };
 
   #handleRemoteOperations = ({data: operations}) => {
     this.#records = operations.reduce(this.#applyOperation, this.#records);
-    this.#recordUpdate();
+    this.#trackLastSync();
   };
 
   #applyOperation = (records, operation) => {
