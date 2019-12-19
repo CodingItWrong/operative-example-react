@@ -11,6 +11,7 @@ module.exports = {
     },
   },
   rules: {
+    'default-case': 'off',
     'prettier/prettier': 'error',
     'react/prop-types': 'off',
   },
