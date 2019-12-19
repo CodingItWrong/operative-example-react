@@ -12,7 +12,7 @@ const TodoList = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    create({name});
+    create({name}).then(() => setName(''));
   };
 
   const handleRename = todoToRename => update(todoToRename, {name: 'Renamed'});
