@@ -12,7 +12,12 @@ export default class Operative {
   }
 
   create(attributes) {
-    const createOperation = {action: 'create', id: uuid(), attributes};
+    const createOperation = {
+      action: 'create',
+      id: uuid(),
+      recordId: uuid(),
+      attributes,
+    };
     return this.#sendOperations([createOperation]).then(({data}) => ({
       id: data[0],
       ...attributes,
@@ -20,7 +25,12 @@ export default class Operative {
   }
 
   update(record, attributes) {
-    const updateOperation = {action: 'update', id: record.id, attributes};
+    const updateOperation = {
+      action: 'update',
+      id: uuid(),
+      recordId: record.id,
+      attributes,
+    };
     return this.#sendOperations([updateOperation]).then(() => ({
       ...record,
       ...attributes,
@@ -28,7 +38,7 @@ export default class Operative {
   }
 
   delete(record) {
-    const deleteOperation = {action: 'delete', id: record.id};
+    const deleteOperation = {action: 'delete', id: uuid(), recordId: record.id};
     return this.#sendOperations([deleteOperation]).then(() => record);
   }
 
