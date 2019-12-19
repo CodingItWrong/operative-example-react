@@ -20,4 +20,13 @@ export default class Operative {
         ...attributes,
       }));
   }
+
+  delete(record) {
+    const deleteOperation = {action: 'delete', id: record.id};
+    return this.#httpClient
+      .post('/', [deleteOperation], {
+        headers: {'Content-Type': 'application/json'},
+      })
+      .then(() => record.id);
+  }
 }

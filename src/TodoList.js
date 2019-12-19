@@ -24,6 +24,11 @@ const TodoList = () => {
     });
   };
 
+  const handleDelete = todoToDelete =>
+    operative
+      .delete(todoToDelete)
+      .then(() => setTodos(todos.filter(todo => todo.id !== todoToDelete.id)));
+
   return (
     <>
       <form onSubmit={handleSubmit}>
@@ -35,7 +40,12 @@ const TodoList = () => {
       </form>
       <ul>
         {todos.map(todo => (
-          <li key={todo.id}>{todo.name}</li>
+          <li key={todo.id}>
+            {todo.name}
+            <button type="button" onClick={() => handleDelete(todo)}>
+              Delete
+            </button>
+          </li>
         ))}
       </ul>
     </>
