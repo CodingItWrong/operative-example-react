@@ -27,7 +27,7 @@ export default class Operative {
 
   delete(record) {
     const deleteOperation = {action: 'delete', id: record.id};
-    return this.#sendOperations([deleteOperation]).then(() => record.id);
+    return this.#sendOperations([deleteOperation]).then(() => record);
   }
 
   #sendOperations = operations => {

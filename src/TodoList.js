@@ -35,7 +35,9 @@ const TodoList = () => {
   const handleDelete = todoToDelete =>
     operative
       .delete(todoToDelete)
-      .then(() => setTodos(todos.filter(todo => todo.id !== todoToDelete.id)));
+      .then(deletedTodo =>
+        setTodos(todos.filter(todo => todo.id !== deletedTodo.id)),
+      );
 
   return (
     <>
