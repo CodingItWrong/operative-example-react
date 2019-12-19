@@ -1,3 +1,5 @@
+import uuid from 'uuid/v4';
+
 export default class Operative {
   #httpClient;
 
@@ -10,7 +12,7 @@ export default class Operative {
   }
 
   create(attributes) {
-    const createOperation = {action: 'create', attributes};
+    const createOperation = {action: 'create', id: uuid(), attributes};
     return this.#sendOperations([createOperation]).then(({data}) => ({
       id: data[0],
       ...attributes,
