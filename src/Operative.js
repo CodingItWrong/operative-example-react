@@ -11,34 +11,28 @@ export default class Operative {
 
   create(attributes) {
     const createOperation = {action: 'create', attributes};
-    return this.#httpClient
-      .post('/', [createOperation], {
-        headers: {'Content-Type': 'application/json'},
-      })
-      .then(({data}) => ({
-        id: data[0],
-        ...attributes,
-      }));
+    return this.#sendOperations([createOperation]).then(({data}) => ({
+      id: data[0],
+      ...attributes,
+    }));
   }
 
   update(record, attributes) {
     const updateOperation = {action: 'update', id: record.id, attributes};
-    return this.#httpClient
-      .post('/', [updateOperation], {
-        headers: {'Content-Type': 'application/json'},
-      })
-      .then(() => ({
-        ...record,
-        ...attributes,
-      }));
+    return this.#sendOperations([updateOperation]).then(() => ({
+      ...record,
+      ...attributes,
+    }));
   }
 
   delete(record) {
     const deleteOperation = {action: 'delete', id: record.id};
-    return this.#httpClient
-      .post('/', [deleteOperation], {
-        headers: {'Content-Type': 'application/json'},
-      })
-      .then(() => record.id);
+    return this.#sendOperations([deleteOperation]).then(() => record.id);
   }
+
+  #sendOperations = operations => {
+    return this.#httpClient.post('/', operations, {
+      headers: {'Content-Type': 'application/json'},
+    });
+  };
 }
