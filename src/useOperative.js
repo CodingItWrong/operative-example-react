@@ -5,38 +5,33 @@ const useOperative = ({httpClient}) => {
   const operative = useMemo(() => new Operative({httpClient}), [httpClient]);
   const [records, setRecords] = useState([]);
 
+  const updateState = useCallback(() => setRecords(operative.records), [
+    operative,
+  ]);
+
   const create = useCallback(
-    attributes =>
-      operative.create(attributes).then(() => setRecords(operative.records)),
+    attributes => operative.create(attributes).then(updateState),
     [operative],
   );
 
   const update = useCallback(
     (record, attributes) =>
-      operative
-        .update(record, attributes)
-        .then(() => setRecords(operative.records)),
+      operative.update(record, attributes).then(updateState),
     [operative],
   );
 
   const destroy = useCallback(
-    recordToDelete =>
-      operative
-        .delete(recordToDelete)
-        .then(() => setRecords(operative.records)),
+    recordToDelete => operative.delete(recordToDelete).then(updateState),
     [operative],
   );
 
   const applyRemoteOperations = useCallback(
-    () =>
-      operative
-        .applyRemoteOperations()
-        .then(() => setRecords(operative.records)),
+    () => operative.applyRemoteOperations().then(updateState),
     [operative],
   );
 
   useEffect(() => {
-    operative.loadAll().then(() => setRecords(operative.records));
+    operative.loadAll().then(updateState);
   }, [operative]);
 
   return {records, create, update, destroy, applyRemoteOperations};
