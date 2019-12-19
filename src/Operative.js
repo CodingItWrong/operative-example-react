@@ -21,8 +21,9 @@ export default class Operative {
   }
 
   applyRemoteOperations() {
-    const url = `/operations?since=${this.#lastSync}`;
-    return this.#httpClient.get(url).then(this.#handleRemoteOperations);
+    return this.#httpClient
+      .get(this.#operationsUrl())
+      .then(this.#handleRemoteOperations);
   }
 
   create(attributes) {
@@ -60,9 +61,10 @@ export default class Operative {
     );
   }
 
+  #operationsUrl = () => `/operations?since=${this.#lastSync}`;
+
   #sendOperations = operations => {
-    const url = `/operations?since=${this.#lastSync}`;
-    return this.#httpClient.post(url, operations, {
+    return this.#httpClient.post(this.#operationsUrl(), operations, {
       headers: {'Content-Type': 'application/json'},
     });
   };
