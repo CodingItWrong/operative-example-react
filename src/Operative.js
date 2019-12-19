@@ -22,10 +22,7 @@ export default class Operative {
 
   applyRemoteOperations() {
     const url = `/operations?since=${this.#lastUpdate}`;
-    return this.#httpClient.get(url).then(({data: operations}) => {
-      this.#records = operations.reduce(this.#applyOperation, this.#records);
-      this.#recordUpdate();
-    });
+    return this.#httpClient.get(url).then(this.#handleRemoteOperations);
   }
 
   create(attributes) {
@@ -35,13 +32,9 @@ export default class Operative {
       recordId: uuid(),
       attributes,
     };
-    return this.#sendOperations([createOperation]).then(() => {
-      const newRecord = {
-        id: createOperation.recordId,
-        ...attributes,
-      };
-      this.#records = [...this.#records, newRecord];
-    });
+    return this.#sendOperations([createOperation]).then(
+      this.#handleRemoteOperations,
+    );
   }
 
   update(record, attributes) {
@@ -51,15 +44,9 @@ export default class Operative {
       recordId: record.id,
       attributes,
     };
-    return this.#sendOperations([updateOperation]).then(() => {
-      const updatedRecord = {
-        ...record,
-        ...attributes,
-      };
-      this.#records = this.#records.map(record =>
-        record.id === updatedRecord.id ? updatedRecord : record,
-      );
-    });
+    return this.#sendOperations([updateOperation]).then(
+      this.#handleRemoteOperations,
+    );
   }
 
   delete(recordToDelete) {
@@ -68,21 +55,25 @@ export default class Operative {
       id: uuid(),
       recordId: recordToDelete.id,
     };
-    return this.#sendOperations([deleteOperation]).then(() => {
-      this.#records = this.#records.filter(
-        record => record.id !== recordToDelete.id,
-      );
-    });
+    return this.#sendOperations([deleteOperation]).then(
+      this.#handleRemoteOperations,
+    );
   }
 
   #sendOperations = operations => {
-    return this.#httpClient.post('/operations', operations, {
+    const url = `/operations?since=${this.#lastUpdate}`;
+    return this.#httpClient.post(url, operations, {
       headers: {'Content-Type': 'application/json'},
     });
   };
 
   #recordUpdate = () => {
     this.#lastUpdate = new Date().getTime();
+  };
+
+  #handleRemoteOperations = ({data: operations}) => {
+    this.#records = operations.reduce(this.#applyOperation, this.#records);
+    this.#recordUpdate();
   };
 
   #applyOperation = (records, operation) => {
