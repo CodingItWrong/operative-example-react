@@ -1,43 +1,23 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import axios from 'axios';
-import Operative from './Operative';
+import useOperative from './useOperative';
 
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000/todos',
 });
 
-const operative = new Operative({httpClient});
-
 const TodoList = () => {
-  const [todos, setTodos] = useState([]);
+  const {records, create, update, destroy} = useOperative({httpClient});
   const [name, setName] = useState('');
-
-  useEffect(() => {
-    operative.loadAll().then(setTodos);
-  }, []);
 
   const handleSubmit = e => {
     e.preventDefault();
-    operative.create({name}).then(newTodo => {
-      setTodos([...todos, newTodo]);
-      setName('');
-    });
+    create({name});
   };
 
-  const handleRename = todoToRename =>
-    operative.update(todoToRename, {name: 'Renamed'}).then(renamedTodo => {
-      console.log({renamedTodo});
-      setTodos(
-        todos.map(todo => (todo.id === renamedTodo.id ? renamedTodo : todo)),
-      );
-    });
+  const handleRename = todoToRename => update(todoToRename, {name: 'Renamed'});
 
-  const handleDelete = todoToDelete =>
-    operative
-      .delete(todoToDelete)
-      .then(deletedTodo =>
-        setTodos(todos.filter(todo => todo.id !== deletedTodo.id)),
-      );
+  const handleDelete = todoToDelete => destroy(todoToDelete);
 
   return (
     <>
@@ -49,7 +29,7 @@ const TodoList = () => {
         />
       </form>
       <ul>
-        {todos.map(todo => (
+        {records.map(todo => (
           <li key={todo.id}>
             {todo.name}
             <button type="button" onClick={() => handleRename(todo)}>
