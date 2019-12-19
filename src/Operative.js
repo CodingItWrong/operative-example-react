@@ -2,13 +2,25 @@ import uuid from 'uuid/v4';
 
 export default class Operative {
   #httpClient;
+  #lastUpdate;
 
   constructor({httpClient}) {
     this.#httpClient = httpClient;
   }
 
   loadAll() {
-    return this.#httpClient.get('/').then(({data}) => data);
+    return this.#httpClient.get('/').then(({data}) => {
+      this.#recordUpdate();
+      return data;
+    });
+  }
+
+  getRemoteOperations() {
+    const url = `/operations?since=${this.#lastUpdate}`;
+    return this.#httpClient.get(url).then(({data}) => {
+      this.#recordUpdate();
+      return data;
+    });
   }
 
   create(attributes) {
@@ -43,8 +55,12 @@ export default class Operative {
   }
 
   #sendOperations = operations => {
-    return this.#httpClient.post('/', operations, {
+    return this.#httpClient.post('/operations', operations, {
       headers: {'Content-Type': 'application/json'},
     });
+  };
+
+  #recordUpdate = () => {
+    this.#lastUpdate = new Date().getTime();
   };
 }
