@@ -1,39 +1,27 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
+import Operative from './Operative';
 
-const api = axios.create({
-  baseURL: 'http://localhost:3000',
+const httpClient = axios.create({
+  baseURL: 'http://localhost:3000/todos',
 });
 
-api.defaults.headers.post['Content-Type'] = 'application/json';
+const operative = new Operative({httpClient});
 
 const TodoList = () => {
   const [todos, setTodos] = useState([]);
   const [name, setName] = useState('');
 
   useEffect(() => {
-    api.get('/todos').then(({data}) => {
-      setTodos(data);
-    });
+    operative.loadAll().then(setTodos);
   }, []);
 
   const handleSubmit = e => {
     e.preventDefault();
-    api
-      .post('/todos', [
-        {
-          action: 'create',
-          attributes: {name},
-        },
-      ])
-      .then(({data}) => {
-        const newTodo = {
-          id: data[0],
-          name,
-        };
-        setTodos([...todos, newTodo]);
-        setName('');
-      });
+    operative.create({name}).then(newTodo => {
+      setTodos([...todos, newTodo]);
+      setName('');
+    });
   };
 
   return (
