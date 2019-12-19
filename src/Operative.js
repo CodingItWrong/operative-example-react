@@ -23,32 +23,8 @@ export default class Operative {
   applyRemoteOperations() {
     const url = `/operations?since=${this.#lastUpdate}`;
     return this.#httpClient.get(url).then(({data: operations}) => {
-      let updatedRecords = this.#records;
-      operations.forEach(operation => {
-        switch (operation.action) {
-          case 'create': {
-            const record = {
-              id: operation.recordId,
-              ...operation.attributes, // TODO: handle server-generated attributes. Or maybe we can't have those in this model. at least dates?
-            };
-            updatedRecords = [...updatedRecords, record];
-            break;
-          }
-          case 'update':
-            updatedRecords = updatedRecords.map(record =>
-              record.id === operation.recordId
-                ? {...record, ...operation.attributes}
-                : record,
-            );
-            break;
-          case 'delete':
-            updatedRecords = updatedRecords.filter(
-              record => record.id !== operation.recordId,
-            );
-            break;
-        }
-      });
-      this.#records = updatedRecords;
+      this.#records = operations.reduce(this.#applyOperation, this.#records);
+      this.#recordUpdate();
     });
   }
 
@@ -107,5 +83,25 @@ export default class Operative {
 
   #recordUpdate = () => {
     this.#lastUpdate = new Date().getTime();
+  };
+
+  #applyOperation = (records, operation) => {
+    switch (operation.action) {
+      case 'create': {
+        const record = {
+          id: operation.recordId,
+          ...operation.attributes, // TODO: handle server-generated attributes. Or maybe we can't have those in this model. at least dates?
+        };
+        return [...records, record];
+      }
+      case 'update':
+        return records.map(record =>
+          record.id === operation.recordId
+            ? {...record, ...operation.attributes}
+            : record,
+        );
+      case 'delete':
+        return records.filter(record => record.id !== operation.recordId);
+    }
   };
 }
