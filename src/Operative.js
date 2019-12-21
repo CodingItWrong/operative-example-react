@@ -26,11 +26,11 @@ export default class Operative {
     const operations = this.#operationsEnqueuedForServer; // A
     console.log({operations});
 
-    const request =
-      operations.length === 0
-        ? this.#getOperations()
-        : this.#sendOperations(operations);
-    return request.then(returnedOperations => {
+    if (operations.length === 0) {
+      return this.#getOperations().then(this.#applyOperations);
+    }
+
+    return this.#sendOperations(operations).then(returnedOperations => {
       // Just receives C back
       // Call the reconciliation function here, with A and C, and B is empty
       this.#applyOperations(returnedOperations);
