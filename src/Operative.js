@@ -23,17 +23,21 @@ export default class Operative {
   }
 
   sync() {
-    const operations = this.#operationsEnqueuedForServer; // A
-    console.log({operations});
+    const queuedOps = this.#operationsEnqueuedForServer; // A
+    console.log({queuedOps});
 
-    if (operations.length === 0) {
+    if (queuedOps.length === 0) {
       return this.#getOperations().then(this.#applyOperations);
     }
 
-    return this.#sendOperations(operations).then(returnedOperations => {
+    return this.#sendOperations(queuedOps).then(remoteOps => {
+      const operationsToApply = this.#handleOutOfOrder({
+        remoteOps,
+        queuedOps,
+      });
       // Just receives C back
       // Call the reconciliation function here, with A and C, and B is empty
-      this.#applyOperations(returnedOperations);
+      this.#applyOperations(operationsToApply);
       this.#operationsEnqueuedForServer = [];
     });
   }
@@ -74,31 +78,35 @@ export default class Operative {
     );
   }
 
+  // eslint-disable-next-line no-unused-vars
+  #handleOutOfOrder = ({queuedOps, remoteOps, newOps = []}) => {
+    // queuedOps are already applied locally, so for this implementation don't need to apply again
+    // but do need to pass them in here in case future algorithms need them
+    return [...remoteOps, ...newOps];
+  };
+
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 
-  #sendOperationsWithQueueing = operations => {
+  #sendOperationsWithQueueing = newOps => {
+    const queuedOps = this.#operationsEnqueuedForServer;
+
     // A = this.#operationsEnqueuedForServer
     // B = operations
-    const operationsToSendToServer = [
-      ...this.#operationsEnqueuedForServer,
-      ...operations,
-    ];
+    const operationsToSendToServer = [...queuedOps, ...newOps];
 
     // Sends A and B
     return this.#sendOperations(operationsToSendToServer)
-      .then(operationsReturnedFromServer => {
-        // Receives C back
-        // Then we apply C then B
-        // When we add the reconciler function, it will receive A, B, and C, and reutrn which to apply in which order
-        const operationsToApply = [
-          ...operationsReturnedFromServer,
-          ...operations,
-        ];
+      .then(remoteOps => {
+        const operationsToApply = this.#handleOutOfOrder({
+          remoteOps,
+          newOps,
+          queuedOps,
+        });
         console.log({
-          operations,
-          enqueued: this.#operationsEnqueuedForServer,
+          newOps,
+          queuedOps,
+          remoteOps,
           operationsToSendToServer,
-          operationsReturnedFromServer,
           operationsToApply,
         });
         this.#operationsEnqueuedForServer = [];
@@ -109,7 +117,7 @@ export default class Operative {
         this.#operationsEnqueuedForServer = operationsToSendToServer;
 
         // resolve to allow applying operations locally
-        return operations;
+        return newOps;
       });
   };
 
