@@ -3,10 +3,12 @@ import uuid from 'uuid/v4';
 export default class Operative {
   #httpClient;
   #records;
+  #operationsEnqueuedForServer;
   #lastSync;
 
   constructor({httpClient}) {
     this.#httpClient = httpClient;
+    this.#operationsEnqueuedForServer = [];
   }
 
   loadAll() {
@@ -62,7 +64,14 @@ export default class Operative {
       .post(this.#operationsUrl(), operations, {
         headers: {'Content-Type': 'application/json'},
       })
-      .then(({data: operations}) => operations);
+      .then(({data: operations}) => operations)
+      .catch(e => {
+        console.log(e);
+        this.#operationsEnqueuedForServer.push(operations);
+
+        // resolve to allow applying operations locally
+        return operations;
+      });
   };
 
   #trackLastSync = () => {
