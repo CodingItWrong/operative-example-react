@@ -74,16 +74,35 @@ export default class Operative {
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 
   #sendOperationsWithQueueing = operations => {
-    return this.#sendOperations(operations).catch(e => {
-      console.log(e);
-      this.#operationsEnqueuedForServer = [
-        ...this.#operationsEnqueuedForServer,
-        ...operations,
-      ];
+    const allOperations = [...this.#operationsEnqueuedForServer, ...operations];
 
-      // resolve to allow applying operations locally
-      return operations;
-    });
+    return this.#sendOperations(allOperations)
+      .then(operationsReturnedFromServer => {
+        const result = this.#removeFromSet({
+          set: operationsReturnedFromServer,
+          itemsToRemove: this.#operationsEnqueuedForServer,
+        });
+        console.log({
+          operations,
+          enqueued: this.#operationsEnqueuedForServer,
+          allOperations,
+          operationsReturnedFromServer,
+          result,
+        });
+        return result;
+      })
+      .catch(e => {
+        console.log(e);
+        this.#operationsEnqueuedForServer = allOperations;
+
+        // resolve to allow applying operations locally
+        return operations;
+      });
+  };
+
+  #removeFromSet = ({set, itemsToRemove}) => {
+    const idsToRemove = itemsToRemove.map(o => o.id);
+    return set.filter(o => !idsToRemove.includes(o.id));
   };
 
   #getOperations = () => {
@@ -106,12 +125,10 @@ export default class Operative {
   };
 
   #applyOperations = (operations, {skip = []} = {}) => {
-    const idsToSkip = skip.map(o => o.id);
-    const operationsToApply = operations.filter(o => !idsToSkip.includes(o.id));
-    this.#records = operationsToApply.reduce(
-      this.#applyOperation,
-      this.#records,
-    );
+    const result = this.#removeFromSet({set: operations, itemsToRemove: skip});
+    console.log({operations, skip, result});
+
+    this.#records = result.reduce(this.#applyOperation, this.#records);
     this.#trackLastSync();
   };
 
