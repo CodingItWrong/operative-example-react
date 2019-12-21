@@ -102,8 +102,13 @@ export default class Operative {
     this.#lastSync = new Date().getTime();
   };
 
-  #applyOperations = operations => {
-    this.#records = operations.reduce(this.#applyOperation, this.#records);
+  #applyOperations = (operations, {skip = []} = {}) => {
+    const idsToSkip = skip.map(o => o.id);
+    const operationsToApply = operations.filter(o => !idsToSkip.includes(o.id));
+    this.#records = operationsToApply.reduce(
+      this.#applyOperation,
+      this.#records,
+    );
     this.#trackLastSync();
   };
 
