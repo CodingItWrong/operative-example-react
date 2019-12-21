@@ -11,28 +11,28 @@ const useOperative = ({httpClient}) => {
 
   const create = useCallback(
     attributes => operative.create(attributes).then(updateState),
-    [operative],
+    [operative, updateState],
   );
 
   const update = useCallback(
     (record, attributes) =>
       operative.update(record, attributes).then(updateState),
-    [operative],
+    [operative, updateState],
   );
 
   const destroy = useCallback(
     recordToDelete => operative.delete(recordToDelete).then(updateState),
-    [operative],
+    [operative, updateState],
   );
 
   const applyRemoteOperations = useCallback(
     () => operative.applyRemoteOperations().then(updateState),
-    [operative],
+    [operative, updateState],
   );
 
   useEffect(() => {
     operative.loadAll().then(updateState);
-  }, [operative]);
+  }, [operative, updateState]);
 
   return {records, create, update, destroy, applyRemoteOperations};
 };
