@@ -23,7 +23,7 @@ export default class Operative {
   applyRemoteOperations() {
     return this.#httpClient
       .get(this.#operationsUrl())
-      .then(this.#handleRemoteOperations);
+      .then(this.#applyOperations);
   }
 
   create(attributes) {
@@ -33,9 +33,7 @@ export default class Operative {
       recordId: uuid(),
       attributes,
     };
-    return this.#sendOperations([createOperation]).then(
-      this.#handleRemoteOperations,
-    );
+    return this.#sendOperations([createOperation]).then(this.#applyOperations);
   }
 
   update(record, attributes) {
@@ -45,9 +43,7 @@ export default class Operative {
       recordId: record.id,
       attributes,
     };
-    return this.#sendOperations([updateOperation]).then(
-      this.#handleRemoteOperations,
-    );
+    return this.#sendOperations([updateOperation]).then(this.#applyOperations);
   }
 
   delete(recordToDelete) {
@@ -56,24 +52,24 @@ export default class Operative {
       id: uuid(),
       recordId: recordToDelete.id,
     };
-    return this.#sendOperations([deleteOperation]).then(
-      this.#handleRemoteOperations,
-    );
+    return this.#sendOperations([deleteOperation]).then(this.#applyOperations);
   }
 
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 
   #sendOperations = operations => {
-    return this.#httpClient.post(this.#operationsUrl(), operations, {
-      headers: {'Content-Type': 'application/json'},
-    });
+    return this.#httpClient
+      .post(this.#operationsUrl(), operations, {
+        headers: {'Content-Type': 'application/json'},
+      })
+      .then(({data: operations}) => operations);
   };
 
   #trackLastSync = () => {
     this.#lastSync = new Date().getTime();
   };
 
-  #handleRemoteOperations = ({data: operations}) => {
+  #applyOperations = operations => {
     this.#records = operations.reduce(this.#applyOperation, this.#records);
     this.#trackLastSync();
   };
