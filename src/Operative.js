@@ -15,7 +15,10 @@ export default class Operative {
   #operationsEnqueuedForServer;
   #lastSync;
 
-  constructor({httpClient, handleOutOfOrder}) {
+  constructor({httpClient, handleOutOfOrder} = {}) {
+    if (!httpClient) throw new Error('httpClient must be provided');
+    if (!handleOutOfOrder) throw new Error('handleOutOfOrder must be provided');
+
     this.#httpClient = httpClient;
     this.#handleOutOfOrder = handleOutOfOrder;
     this.#operationsEnqueuedForServer = [];
