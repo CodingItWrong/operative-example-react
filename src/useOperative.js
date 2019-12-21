@@ -1,8 +1,11 @@
 import {useState, useMemo, useCallback, useEffect} from 'react';
 import Operative from './Operative';
 
-const useOperative = ({httpClient}) => {
-  const operative = useMemo(() => new Operative({httpClient}), [httpClient]);
+const useOperative = ({httpClient, handleOutOfOrder}) => {
+  const operative = useMemo(
+    () => new Operative({httpClient, handleOutOfOrder}),
+    [httpClient],
+  );
   const [records, setRecords] = useState([]);
 
   const updateState = useCallback(() => setRecords(operative.records), [

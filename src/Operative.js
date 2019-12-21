@@ -1,13 +1,23 @@
 import uuid from 'uuid/v4';
 
+// queuedOps are already applied locally, so for this implementation don't need to apply again
+// but do need to pass them in here in case future algorithms need them
+// eslint-disable-next-line no-unused-vars
+export const handleOutOfOrderSloppy = ({queuedOps, remoteOps, newOps = []}) => [
+  ...remoteOps,
+  ...newOps,
+];
+
 export default class Operative {
   #httpClient;
+  #handleOutOfOrder;
   #records;
   #operationsEnqueuedForServer;
   #lastSync;
 
-  constructor({httpClient}) {
+  constructor({httpClient, handleOutOfOrder}) {
     this.#httpClient = httpClient;
+    this.#handleOutOfOrder = handleOutOfOrder;
     this.#operationsEnqueuedForServer = [];
   }
 
@@ -77,13 +87,6 @@ export default class Operative {
       this.#applyOperations,
     );
   }
-
-  // eslint-disable-next-line no-unused-vars
-  #handleOutOfOrder = ({queuedOps, remoteOps, newOps = []}) => {
-    // queuedOps are already applied locally, so for this implementation don't need to apply again
-    // but do need to pass them in here in case future algorithms need them
-    return [...remoteOps, ...newOps];
-  };
 
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 

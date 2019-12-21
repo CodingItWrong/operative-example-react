@@ -1,13 +1,17 @@
 import React, {useState} from 'react';
 import axios from 'axios';
 import useOperative from './useOperative';
+import {handleOutOfOrderSloppy} from './Operative';
 
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000/todos',
 });
 
 const TodoList = () => {
-  const {records, create, update, destroy, sync} = useOperative({httpClient});
+  const {records, create, update, destroy, sync} = useOperative({
+    httpClient,
+    handleOutOfOrder: handleOutOfOrderSloppy,
+  });
   const [name, setName] = useState('');
 
   const handleSubmit = e => {
