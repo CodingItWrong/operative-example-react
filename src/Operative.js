@@ -30,7 +30,10 @@ export default class Operative {
       operations.length === 0
         ? this.#getOperations()
         : this.#sendOperations(operations);
-    return request.then(this.#applyOperations);
+    return request.then(returnedOperations => {
+      this.#applyOperations(returnedOperations, {skip: operations});
+      this.#operationsEnqueuedForServer = [];
+    });
   }
 
   create(attributes) {
