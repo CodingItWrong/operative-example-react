@@ -25,16 +25,16 @@ const useOperative = ({httpClient}) => {
     [operative, updateState],
   );
 
-  const applyRemoteOperations = useCallback(
-    () => operative.applyRemoteOperations().then(updateState),
-    [operative, updateState],
-  );
+  const sync = useCallback(() => operative.sync().then(updateState), [
+    operative,
+    updateState,
+  ]);
 
   useEffect(() => {
     operative.loadAll().then(updateState);
   }, [operative, updateState]);
 
-  return {records, create, update, destroy, applyRemoteOperations};
+  return {records, create, update, destroy, sync};
 };
 
 export default useOperative;

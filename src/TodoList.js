@@ -7,13 +7,7 @@ const httpClient = axios.create({
 });
 
 const TodoList = () => {
-  const {
-    records,
-    create,
-    update,
-    destroy,
-    applyRemoteOperations,
-  } = useOperative({httpClient});
+  const {records, create, update, destroy, sync} = useOperative({httpClient});
   const [name, setName] = useState('');
 
   const handleSubmit = e => {
@@ -34,7 +28,7 @@ const TodoList = () => {
           onChange={e => setName(e.target.value)}
         />
       </form>
-      <button onClick={applyRemoteOperations}>Apply Remote Operations</button>
+      <button onClick={sync}>Sync</button>
       <ul>
         {records.map(todo => (
           <li key={todo.id}>

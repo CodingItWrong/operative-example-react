@@ -22,10 +22,15 @@ export default class Operative {
     return this.#records;
   }
 
-  applyRemoteOperations() {
-    return this.#httpClient
-      .get(this.#operationsUrl())
-      .then(this.#applyOperations);
+  sync() {
+    const operations = this.#operationsEnqueuedForServer;
+    console.log({operations});
+
+    const request =
+      operations.length === 0
+        ? this.#getOperations()
+        : this.#sendOperations(operations);
+    return request.then(this.#applyOperations);
   }
 
   create(attributes) {
@@ -35,7 +40,9 @@ export default class Operative {
       recordId: uuid(),
       attributes,
     };
-    return this.#sendOperations([createOperation]).then(this.#applyOperations);
+    return this.#sendOperationsWithQueueing([createOperation]).then(
+      this.#applyOperations,
+    );
   }
 
   update(record, attributes) {
@@ -45,7 +52,9 @@ export default class Operative {
       recordId: record.id,
       attributes,
     };
-    return this.#sendOperations([updateOperation]).then(this.#applyOperations);
+    return this.#sendOperationsWithQueueing([updateOperation]).then(
+      this.#applyOperations,
+    );
   }
 
   delete(recordToDelete) {
@@ -54,24 +63,39 @@ export default class Operative {
       id: uuid(),
       recordId: recordToDelete.id,
     };
-    return this.#sendOperations([deleteOperation]).then(this.#applyOperations);
+    return this.#sendOperationsWithQueueing([deleteOperation]).then(
+      this.#applyOperations,
+    );
   }
 
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 
+  #sendOperationsWithQueueing = operations => {
+    return this.#sendOperations(operations).catch(e => {
+      console.log(e);
+      this.#operationsEnqueuedForServer = [
+        ...this.#operationsEnqueuedForServer,
+        ...operations,
+      ];
+
+      // resolve to allow applying operations locally
+      return operations;
+    });
+  };
+
+  #getOperations = () => {
+    return this.#httpClient
+      .get(this.#operationsUrl())
+      .then(({data: operations}) => operations);
+  };
+
   #sendOperations = operations => {
+    console.log('#sendOperations', {operations});
     return this.#httpClient
       .post(this.#operationsUrl(), operations, {
         headers: {'Content-Type': 'application/json'},
       })
-      .then(({data: operations}) => operations)
-      .catch(e => {
-        console.log(e);
-        this.#operationsEnqueuedForServer.push(operations);
-
-        // resolve to allow applying operations locally
-        return operations;
-      });
+      .then(({data: operations}) => operations);
   };
 
   #trackLastSync = () => {
