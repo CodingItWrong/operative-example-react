@@ -89,6 +89,7 @@ export default class Operative {
           operationsReturnedFromServer,
           result,
         });
+        this.#operationsEnqueuedForServer = [];
         return result;
       })
       .catch(e => {
