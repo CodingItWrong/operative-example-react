@@ -23,7 +23,7 @@ export default class Operative {
   }
 
   sync() {
-    const operations = this.#operationsEnqueuedForServer;
+    const operations = this.#operationsEnqueuedForServer; // A
     console.log({operations});
 
     const request =
@@ -31,7 +31,9 @@ export default class Operative {
         ? this.#getOperations()
         : this.#sendOperations(operations);
     return request.then(returnedOperations => {
-      this.#applyOperations(returnedOperations, {skip: operations});
+      // Just receives C back
+      // Call the reconciliation function here, with A and C, and B is empty
+      this.#applyOperations(returnedOperations);
       this.#operationsEnqueuedForServer = [];
     });
   }
@@ -43,6 +45,7 @@ export default class Operative {
       recordId: uuid(),
       attributes,
     };
+
     return this.#sendOperationsWithQueueing([createOperation]).then(
       this.#applyOperations,
     );
@@ -74,27 +77,36 @@ export default class Operative {
   #operationsUrl = () => `/operations?since=${this.#lastSync}`;
 
   #sendOperationsWithQueueing = operations => {
-    const allOperations = [...this.#operationsEnqueuedForServer, ...operations];
+    // A = this.#operationsEnqueuedForServer
+    // B = operations
+    const operationsToSendToServer = [
+      ...this.#operationsEnqueuedForServer,
+      ...operations,
+    ];
 
-    return this.#sendOperations(allOperations)
+    // Sends A and B
+    return this.#sendOperations(operationsToSendToServer)
       .then(operationsReturnedFromServer => {
-        const result = this.#removeFromSet({
-          set: operationsReturnedFromServer,
-          itemsToRemove: this.#operationsEnqueuedForServer,
-        });
+        // Receives C back
+        // Then we apply C then B
+        // When we add the reconciler function, it will receive A, B, and C, and reutrn which to apply in which order
+        const operationsToApply = [
+          ...operationsReturnedFromServer,
+          ...operations,
+        ];
         console.log({
           operations,
           enqueued: this.#operationsEnqueuedForServer,
-          allOperations,
+          operationsToSendToServer,
           operationsReturnedFromServer,
-          result,
+          operationsToApply,
         });
         this.#operationsEnqueuedForServer = [];
-        return result;
+        return operationsToApply;
       })
       .catch(e => {
         console.log(e);
-        this.#operationsEnqueuedForServer = allOperations;
+        this.#operationsEnqueuedForServer = operationsToSendToServer;
 
         // resolve to allow applying operations locally
         return operations;
@@ -125,11 +137,8 @@ export default class Operative {
     this.#lastSync = new Date().getTime();
   };
 
-  #applyOperations = (operations, {skip = []} = {}) => {
-    const result = this.#removeFromSet({set: operations, itemsToRemove: skip});
-    console.log({operations, skip, result});
-
-    this.#records = result.reduce(this.#applyOperation, this.#records);
+  #applyOperations = operations => {
+    this.#records = operations.reduce(this.#applyOperation, this.#records);
     this.#trackLastSync();
   };
 
