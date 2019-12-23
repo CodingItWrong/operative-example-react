@@ -178,7 +178,7 @@ class Operative {
 }
 
 const OperativeFactory = {
-  create: (options = {}) => new Operative(options),
+  create: (options = {}) => Promise.resolve(new Operative(options)),
 };
 
 export default OperativeFactory;

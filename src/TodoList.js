@@ -8,7 +8,7 @@ const httpClient = axios.create({
 });
 
 const TodoList = () => {
-  const {records, create, update, destroy, sync} = useOperative({
+  const {ready, records, create, update, destroy, sync} = useOperative({
     httpClient,
     handleOutOfOrder: handleOutOfOrderSloppy,
   });
@@ -22,6 +22,10 @@ const TodoList = () => {
   const handleRename = todoToRename => update(todoToRename, {name: 'Renamed'});
 
   const handleDelete = todoToDelete => destroy(todoToDelete);
+
+  if (!ready) {
+    return <p>Loading…</p>;
+  }
 
   return (
     <>

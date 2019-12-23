@@ -1,12 +1,17 @@
-import {useState, useMemo, useCallback, useEffect} from 'react';
+import {useState, useCallback, useEffect} from 'react';
 import Operative from './Operative';
 
 const useOperative = ({httpClient, handleOutOfOrder}) => {
-  const operative = useMemo(
-    () => Operative.create({httpClient, handleOutOfOrder}),
-    [httpClient],
-  );
+  const [operative, setOperative] = useState(null);
   const [records, setRecords] = useState([]);
+
+  useEffect(() => {
+    Operative.create({httpClient, handleOutOfOrder}).then(newOperative => {
+      setOperative(newOperative);
+    });
+  }, [httpClient, handleOutOfOrder]);
+
+  const ready = operative !== null;
 
   const updateState = useCallback(() => setRecords(operative.records), [
     operative,
@@ -34,10 +39,12 @@ const useOperative = ({httpClient, handleOutOfOrder}) => {
   ]);
 
   useEffect(() => {
-    operative.loadAll().then(updateState);
-  }, [operative, updateState]);
+    if (ready) {
+      operative.loadAll().then(updateState);
+    }
+  }, [ready, operative, updateState]);
 
-  return {records, create, update, destroy, sync};
+  return {ready, records, create, update, destroy, sync};
 };
 
 export default useOperative;
