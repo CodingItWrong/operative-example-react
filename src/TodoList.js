@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import useOperative from './useOperative';
+import {useOperative} from './Operative';
 import {handleOutOfOrderSloppy} from './Operative';
 
 const httpClient = axios.create({

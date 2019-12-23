@@ -47,4 +47,4 @@ const useOperative = ({httpClient, handleOutOfOrder}) => {
   return {ready, records, create, update, destroy, sync};
 };
 
-export default useOperative;
+export {useOperative};
