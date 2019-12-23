@@ -11,23 +11,36 @@ export const handleOutOfOrderSloppy = ({queuedOps, remoteOps, newOps = []}) => [
 class Operative {
   #httpClient;
   #handleOutOfOrder;
+  #persister;
   #records;
   #operationsEnqueuedForServer;
   #lastSync;
 
-  constructor({httpClient, handleOutOfOrder} = {}) {
+  constructor({
+    httpClient,
+    handleOutOfOrder,
+    persister,
+    records = [],
+    operationsEnqueuedForServer = [],
+    lastSync = null,
+  } = {}) {
     if (!httpClient) throw new Error('httpClient must be provided');
     if (!handleOutOfOrder) throw new Error('handleOutOfOrder must be provided');
+    if (!persister) throw new Error('persister must be provided');
 
     this.#httpClient = httpClient;
     this.#handleOutOfOrder = handleOutOfOrder;
-    this.#operationsEnqueuedForServer = [];
+    this.#persister = persister;
+    this.#records = records;
+    this.#operationsEnqueuedForServer = operationsEnqueuedForServer;
+    this.#lastSync = lastSync;
   }
 
   loadAll() {
     return this.#httpClient.get('/').then(({data}) => {
       this.#records = data;
       this.#trackLastSync();
+      this.#persist();
     });
   }
 
@@ -154,6 +167,7 @@ class Operative {
   #applyOperations = operations => {
     this.#records = operations.reduce(this.#applyOperation, this.#records);
     this.#trackLastSync();
+    this.#persist();
   };
 
   #applyOperation = (records, operation) => {
@@ -175,10 +189,30 @@ class Operative {
         return records.filter(record => record.id !== operation.recordId);
     }
   };
+
+  #persist = () => {
+    const data = {
+      records: this.#records,
+      operationsEnqueuedForServer: this.#operationsEnqueuedForServer,
+      lastSync: this.#lastSync,
+    };
+    this.#persister.save(data);
+  };
 }
 
 const OperativeFactory = {
-  create: (options = {}) => Promise.resolve(new Operative(options)),
+  create: ({httpClient, handleOutOfOrder, persister} = {}) => {
+    if (!persister) throw new Error('persister must be provided');
+
+    return persister.load().then(persistedData => {
+      return new Operative({
+        httpClient,
+        handleOutOfOrder,
+        persister,
+        ...persistedData,
+      });
+    });
+  },
 };
 
 export default OperativeFactory;

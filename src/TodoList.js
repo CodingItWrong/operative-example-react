@@ -1,15 +1,21 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {useOperative} from './Operative';
-import {handleOutOfOrderSloppy} from './Operative';
+import {
+  useOperative,
+  handleOutOfOrderSloppy,
+  LocalStoragePersister,
+} from './Operative';
 
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000/todos',
 });
 
+const persister = new LocalStoragePersister('operative');
+
 const TodoList = () => {
   const {ready, records, create, update, destroy, sync} = useOperative({
     httpClient,
+    persister,
     handleOutOfOrder: handleOutOfOrderSloppy,
   });
   const [name, setName] = useState('');
