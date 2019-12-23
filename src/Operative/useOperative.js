@@ -42,6 +42,7 @@ const useOperative = ({httpClient, handleOutOfOrder, persister}) => {
 
   useEffect(() => {
     if (ready) {
+      updateState();
       operative.loadAll().then(updateState);
     }
   }, [ready, operative, updateState]);
