@@ -3,7 +3,7 @@ import Operative from './Operative';
 
 const useOperative = ({httpClient, handleOutOfOrder}) => {
   const operative = useMemo(
-    () => new Operative({httpClient, handleOutOfOrder}),
+    () => Operative.create({httpClient, handleOutOfOrder}),
     [httpClient],
   );
   const [records, setRecords] = useState([]);

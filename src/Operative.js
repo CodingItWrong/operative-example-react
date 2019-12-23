@@ -8,7 +8,7 @@ export const handleOutOfOrderSloppy = ({queuedOps, remoteOps, newOps = []}) => [
   ...newOps,
 ];
 
-export default class Operative {
+class Operative {
   #httpClient;
   #handleOutOfOrder;
   #records;
@@ -176,3 +176,9 @@ export default class Operative {
     }
   };
 }
+
+const OperativeFactory = {
+  create: (options = {}) => new Operative(options),
+};
+
+export default OperativeFactory;
