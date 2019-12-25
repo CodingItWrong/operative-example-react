@@ -158,11 +158,20 @@ class Operative {
 
   #sendOperations = operations => {
     console.log('#sendOperations', {operations});
-    return this.#httpClient
-      .post(this.#operationsUrl(), operations, {
-        headers: {'Content-Type': 'application/json'},
-      })
-      .then(({data: operations}) => operations);
+
+    if (this.#webSocket && this.#webSocket.readyState === WebSocket.OPEN) {
+      console.log('sending via web socket');
+      const message = JSON.stringify(operations);
+      this.#webSocket.send(message);
+      return Promise.resolve(operations);
+    } else {
+      console.log('sending via http');
+      return this.#httpClient
+        .post(this.#operationsUrl(), operations, {
+          headers: {'Content-Type': 'application/json'},
+        })
+        .then(({data: operations}) => operations);
+    }
   };
 
   #trackLastSync = () => {
@@ -215,8 +224,10 @@ class Operative {
       console.log('Web socket closed');
     };
 
-    socket.onmessage = event => {
-      console.log(`Message: ${event.data}`);
+    socket.onmessage = ({data: message}) => {
+      const operations = JSON.parse(message);
+      console.log(`Operations: ${message}`);
+      this.#applyOperations(operations);
     };
   };
 }
