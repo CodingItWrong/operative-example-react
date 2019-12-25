@@ -1,17 +1,17 @@
 import {useState, useCallback, useEffect} from 'react';
 import Operative from './Operative';
 
-const useOperative = ({httpClient, handleOutOfOrder, persister}) => {
+const useOperative = ({httpClient, webSocket, handleOutOfOrder, persister}) => {
   const [operative, setOperative] = useState(null);
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    Operative.create({httpClient, handleOutOfOrder, persister}).then(
+    Operative.create({httpClient, webSocket, handleOutOfOrder, persister}).then(
       newOperative => {
         setOperative(newOperative);
       },
     );
-  }, [httpClient, handleOutOfOrder, persister]);
+  }, [httpClient, webSocket, handleOutOfOrder, persister]);
 
   const ready = operative !== null;
 

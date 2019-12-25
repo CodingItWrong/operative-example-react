@@ -9,12 +9,14 @@ import {
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000/todos',
 });
+const webSocket = new WebSocket('ws://localhost:3000');
 
 const persister = new LocalStoragePersister('operative');
 
 const TodoList = () => {
   const {ready, records, create, update, destroy, sync} = useOperative({
     httpClient,
+    webSocket,
     persister,
     handleOutOfOrder: handleOutOfOrderSloppy,
   });

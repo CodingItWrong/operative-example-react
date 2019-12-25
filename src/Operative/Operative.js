@@ -10,6 +10,7 @@ export const handleOutOfOrderSloppy = ({queuedOps, remoteOps, newOps = []}) => [
 
 class Operative {
   #httpClient;
+  #webSocket;
   #handleOutOfOrder;
   #persister;
   #records;
@@ -18,6 +19,7 @@ class Operative {
 
   constructor({
     httpClient,
+    webSocket,
     handleOutOfOrder,
     persister,
     records = [],
@@ -29,11 +31,14 @@ class Operative {
     if (!persister) throw new Error('persister must be provided');
 
     this.#httpClient = httpClient;
+    this.#webSocket = webSocket;
     this.#handleOutOfOrder = handleOutOfOrder;
     this.#persister = persister;
     this.#records = records;
     this.#operationsEnqueuedForServer = operationsEnqueuedForServer;
     this.#lastSync = lastSync;
+
+    this.#setUpWebSocket();
   }
 
   loadAll() {
@@ -198,15 +203,32 @@ class Operative {
     };
     this.#persister.save(data);
   };
+
+  #setUpWebSocket = () => {
+    const socket = this.#webSocket;
+
+    socket.onopen = () => {
+      console.log('Web socket connected');
+    };
+
+    socket.onclose = () => {
+      console.log('Web socket closed');
+    };
+
+    socket.onmessage = event => {
+      console.log(`Message: ${event.data}`);
+    };
+  };
 }
 
 const OperativeFactory = {
-  create: ({httpClient, handleOutOfOrder, persister} = {}) => {
+  create: ({httpClient, webSocket, handleOutOfOrder, persister} = {}) => {
     if (!persister) throw new Error('persister must be provided');
 
     return persister.load().then(persistedData => {
       return new Operative({
         httpClient,
+        webSocket,
         handleOutOfOrder,
         persister,
         ...persistedData,
