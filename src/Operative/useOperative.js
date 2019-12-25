@@ -11,7 +11,7 @@ const useOperative = ({httpClient, handleOutOfOrder, persister}) => {
         setOperative(newOperative);
       },
     );
-  }, [httpClient, handleOutOfOrder]);
+  }, [httpClient, handleOutOfOrder, persister]);
 
   const ready = operative !== null;
 
