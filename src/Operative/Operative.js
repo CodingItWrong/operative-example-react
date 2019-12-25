@@ -166,7 +166,7 @@ class Operative {
       console.log('sending via web socket');
       const message = JSON.stringify(operations);
       this.#webSocket.send(message);
-      return Promise.resolve(operations);
+      return Promise.resolve([]);
     } else {
       console.log('sending via http');
       return this.#httpClient
