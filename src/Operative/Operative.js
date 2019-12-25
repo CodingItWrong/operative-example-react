@@ -13,6 +13,7 @@ class Operative {
   #webSocket;
   #handleOutOfOrder;
   #persister;
+  #onChange;
   #records;
   #operationsEnqueuedForServer;
   #lastSync;
@@ -22,6 +23,7 @@ class Operative {
     webSocket,
     handleOutOfOrder,
     persister,
+    onChange,
     records = [],
     operationsEnqueuedForServer = [],
     lastSync = null,
@@ -34,6 +36,7 @@ class Operative {
     this.#webSocket = webSocket;
     this.#handleOutOfOrder = handleOutOfOrder;
     this.#persister = persister;
+    this.#onChange = onChange;
     this.#records = records;
     this.#operationsEnqueuedForServer = operationsEnqueuedForServer;
     this.#lastSync = lastSync;
@@ -182,6 +185,9 @@ class Operative {
     this.#records = operations.reduce(this.#applyOperation, this.#records);
     this.#trackLastSync();
     this.#persist();
+    if (this.#onChange) {
+      this.#onChange(this.#records);
+    }
   };
 
   #applyOperation = (records, operation) => {
@@ -233,7 +239,13 @@ class Operative {
 }
 
 const OperativeFactory = {
-  create: ({httpClient, webSocket, handleOutOfOrder, persister} = {}) => {
+  create: ({
+    httpClient,
+    webSocket,
+    handleOutOfOrder,
+    persister,
+    onChange,
+  } = {}) => {
     if (!persister) throw new Error('persister must be provided');
 
     return persister.load().then(persistedData => {
@@ -242,6 +254,7 @@ const OperativeFactory = {
         webSocket,
         handleOutOfOrder,
         persister,
+        onChange,
         ...persistedData,
       });
     });
