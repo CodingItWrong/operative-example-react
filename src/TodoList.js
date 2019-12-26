@@ -1,10 +1,7 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {
-  useOperative,
-  handleOutOfOrderSloppy,
-  LocalStoragePersister,
-} from './Operative';
+import {useOperative, handleOutOfOrderSloppy} from 'operative-react';
+import LocalStoragePersister from 'operative-local-storage';
 
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000/todos',
