@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import axios from 'axios';
-import {useOperative, handleOutOfOrderSloppy} from 'operative-react';
+import {handleOutOfOrderSloppy} from 'operative-client';
+import {useOperative} from 'operative-react';
 import LocalStoragePersister from 'operative-local-storage';
 
 const httpClient = axios.create({
